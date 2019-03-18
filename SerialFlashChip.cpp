@@ -332,11 +332,13 @@ Serial.println("Init erase ALL prog....");
 		flags |= (die_index + 1) << 6;
 	} else if (DIE_NAND){
 
-			for(uint16_t i = 0; i < 2048; i++)
-			{
-			uint32_t address = i*64;
-			eraseBlock(address);
-			}	
+for(uint16_t i = 0; i < 2048; i++){
+
+uint32_t address = i*64;
+eraseBlock(address);
+
+
+}
         
         } else {
 
@@ -392,18 +394,17 @@ void SerialFlashChip::eraseBlock(uint32_t addr)
     	CSASSERT();
     	SPI.transfer(CMD_BLOCK128K_ERASE);
     	SPI.transfer(0);//Dummy
-    	SPI.transfer16(addr);
+    	SPI.transfer16(addr & 0xFFFF);
 
-	PageRenew = true;
     
     	     }
  
   CSRELEASE();
   SPI.endTransaction();
-
+  Serial.println("Block erase...");
   busy = 1;
+  PageRenew = true;
 }
-
 /*
 void SerialFlashChip::eraseBlock(uint32_t addr)
 {
