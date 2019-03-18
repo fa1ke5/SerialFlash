@@ -332,49 +332,11 @@ Serial.println("Init erase ALL prog....");
 		flags |= (die_index + 1) << 6;
 	} else if (DIE_NAND){
 
-     if (busy) wait();
-     SPI.beginTransaction(SPICONFIG);
-     CSASSERT();  
-     SPI.transfer(0x06); // write enable command
-     CSRELEASE(); 
-     SPI.endTransaction();
-     delayMicroseconds(1);
-for(uint16_t i = 0; i < 2048; i++){
-
-uint32_t addr = i*64;
-    if (addr >> 16 != Act_Die)
-		{ //Select DIE
-		Act_Die = addr >> 16;		
-
-    		SPI.beginTransaction(SPICONFIG);
-    		CSASSERT();
-		SPI.transfer(CMD_SOFT_DIE_SELECT); 
-	        SPI.transfer(Act_Die);   
-	        CSRELEASE();
-		SPI.endTransaction();
-                delayMicroseconds(1);
-		//push write enable command
-		SPI.beginTransaction(SPICONFIG);
-	        CSASSERT();
-	        SPI.transfer(0x06); // write enable command
-		CSRELEASE();
-		SPI.endTransaction();
-     		delayMicroseconds(1);
-		}
-    //push block erase command
-    SPI.beginTransaction(SPICONFIG);
-    CSASSERT();
-    SPI.transfer(CMD_BLOCK128K_ERASE);
-    SPI.transfer(0);//Dumm
-    SPI.transfer16(addr);
-    CSRELEASE(); 
-    SPI.endTransaction();
-    busy = 1;
-    PageRenew = true;
-    break;
-    
-
-}
+			for(uint16_t i = 0; i < 2048; i++)
+			{
+			uint32_t address = i*64;
+			eraseBlock(address);
+			}	
         
         } else {
 
