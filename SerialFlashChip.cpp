@@ -304,6 +304,7 @@ Serial.println("Init erase ALL prog....");
 	readID(id);
 	//Serial.printf("ID: %02X %02X %02X\n", id[0], id[1], id[2]);
 	if (id[0] == 0x20 && id[2] >= 0x20 && id[2] <= 0x22) {
+
 		// Micron's multi-die chips require special die erase commands
 		//  N25Q512A	20 BA 20  2 dies  32 Mbyte/die   65 nm transitors
 		//  N25Q00AA	20 BA 21  4 dies  32 Mbyte/die   65 nm transitors
@@ -330,8 +331,53 @@ Serial.println("Init erase ALL prog....");
 		 //Serial.printf("Micron erase begin\n");
 		flags |= (die_index + 1) << 6;
 	} else if (DIE_NAND){
+
+     if (busy) wait();
+     SPI.beginTransaction(SPICONFIG);
+     CSASSERT();  
+     SPI.transfer(0x06); // write enable command
+     CSRELEASE(); 
+     SPI.endTransaction();
+     delayMicroseconds(1);
+for(uint16_t i = 0; i < 2048; i++){
+
+uint32_t addr = i*64;
+    if (addr >> 16 != Act_Die)
+		{ //Select DIE
+		Act_Die = addr >> 16;		
+
+    		SPI.beginTransaction(SPICONFIG);
+    		CSASSERT();
+		SPI.transfer(CMD_SOFT_DIE_SELECT); 
+	        SPI.transfer(Act_Die);   
+	        CSRELEASE();
+		SPI.endTransaction();
+                delayMicroseconds(1);
+		//push write enable command
+		SPI.beginTransaction(SPICONFIG);
+	        CSASSERT();
+	        SPI.transfer(0x06); // write enable command
+		CSRELEASE();
+		SPI.endTransaction();
+     		delayMicroseconds(1);
+		}
+    //push block erase command
+    SPI.beginTransaction(SPICONFIG);
+    CSASSERT();
+    SPI.transfer(CMD_BLOCK128K_ERASE);
+    SPI.transfer(0);//Dumm
+    SPI.transfer16(addr);
+    CSRELEASE(); 
+    SPI.endTransaction();
+    busy = 1;
+    PageRenew = true;
+    break;
+    
+
+}
         
         } else {
+
 		// All other chips support the bulk erase command
 		SPIPORT.beginTransaction(SPICONFIG);
 		CSASSERT();
@@ -353,48 +399,47 @@ void SerialFlashChip::eraseBlock(uint32_t addr)
 {
   uint8_t f = flags;
   if (busy) wait();
+
   SPI.beginTransaction(SPICONFIG);
-  CSASSERT();
+  CSASSERT();  
   SPI.transfer(0x06); // write enable command
-  CSRELEASE();
-   delayMicroseconds(1);
+  CSRELEASE(); 
+  SPI.endTransaction();
+
 
   if (DIE_NAND){
-   if (addr >> 10 != Act_Die){ //Select DIE
-   
-              Serial.print("Current DIE = ");Serial.println(Act_Die);
-              Serial.print("need DIE = ");Serial.println(addr >> 10);
-              Serial.print("Change active DIE, send SPI cmd = ");Serial.println(CMD_SOFT_DIE_SELECT, HEX);
-      Act_Die = addr >> 10;
+   	if (addr >> 16 != Act_Die)
+		{ //Select DIE
+		Serial.print("Current DIE = ");Serial.println(Act_Die);
+              	Serial.print("need DIE = ");Serial.println(addr >> 16);
+		Act_Die = addr >> 16;
+	        SPI.beginTransaction(SPICONFIG);
+		CSASSERT();  
+		SPI.transfer(CMD_SOFT_DIE_SELECT); 
+		SPI.transfer(Act_Die);   
+		CSRELEASE();
+		SPI.endTransaction();
+        	//push write enable command
+        	SPI.beginTransaction(SPICONFIG);
+        	CSASSERT();
+        	SPI.transfer(0x06); // write enable command
+   		CSRELEASE();
+      		SPI.endTransaction();
+    		}
 
-   SPI.endTransaction();
-   delayMicroseconds(1);
-        
-        SPI.beginTransaction(SPICONFIG);
-        CSASSERT();
-        SPI.transfer(CMD_SOFT_DIE_SELECT); 
-        SPI.transfer(Act_Die);   
-        CSRELEASE();
-	SPI.endTransaction();
-        delayMicroseconds(1);
-        SPI.beginTransaction(SPICONFIG);
-        CSASSERT();
-        SPI.transfer(0x06); // write enable command
-        CSRELEASE();
+	SPI.beginTransaction(SPICONFIG);
+    	CSASSERT();
+    	SPI.transfer(CMD_BLOCK128K_ERASE);
+    	SPI.transfer(0);//Dummy
+    	SPI.transfer16(addr);
 
-    }
-
-    CSASSERT();
-    SPI.transfer(CMD_BLOCK128K_ERASE);
-    SPI.transfer(0);//Dumm
-
-SPI.transfer16(addr & 0x7FF);
-CSRELEASE();
-PageRenew = true;
+	PageRenew = true;
     
-    } 
-////  CSRELEASE();
+    	     }
+ 
+  CSRELEASE();
   SPI.endTransaction();
+
   busy = 1;
 }
 
@@ -739,4 +784,5 @@ W25M02GVZEIG		128
 // LE25U40CMC		1/2	64	62 06 13
 
 SerialFlashChip SerialFlash;
+
 
