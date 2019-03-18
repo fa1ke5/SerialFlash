@@ -401,7 +401,6 @@ void SerialFlashChip::eraseBlock(uint32_t addr)
  
   CSRELEASE();
   SPI.endTransaction();
-  Serial.println("Block erase...");
   busy = 1;
   PageRenew = true;
 }
