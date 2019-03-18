@@ -218,7 +218,7 @@ void SerialFlashChip::write(uint32_t addr, const void *buf, uint32_t len)
   do {
     if (busy) wait();
 
-max = 2048 - (addr & 0x7FF); //248
+max = 2048 - (addr & 0x7FF); 
 pagelen = (len <= max) ? len : max; 
 
      //Serial.printf("WR: addr %08X, pagelen %d\n", addr, pagelen);
@@ -226,44 +226,42 @@ pagelen = (len <= max) ? len : max;
               if ((addr >> 27) != Act_Die)
                   { //Select DIE
                   
-              Serial.print("Current DIE = ");Serial.println(Act_Die);
-              Serial.print("need DIE = ");Serial.println(addr >> 27);
+              		Serial.print("Current DIE = ");Serial.println(Act_Die);
+              		Serial.print("need DIE = ");Serial.println(addr >> 27);
 
-					Act_Die = addr >> 27;
-					SPI.beginTransaction(SPICONFIG);
-					CSASSERT();
-					SPI.transfer(CMD_SOFT_DIE_SELECT); 
-					SPI.transfer(Act_Die);   
-					CSRELEASE();
-					SPI.endTransaction();
-					delayMicroseconds(1);
-                  }
-					SPI.beginTransaction(SPICONFIG);
-					CSASSERT();
-                    SPI.transfer(CMD_PAGE_DATA_READ);
-                    SPI.transfer(0); //Dummy byte
-                    SPI.transfer16(addr >> 11);
-                    CSRELEASE();
-		            SPI.endTransaction();
-                    delayMicroseconds(50);
-					Curr_Page = addr >> 11;
-              //    }
-                  
-                  
+			Act_Die = addr >> 27;
 			SPI.beginTransaction(SPICONFIG);
-			
-			CSASSERT(); 
-			SPI.transfer(0x06); // write enable command
+			CSASSERT();
+			SPI.transfer(CMD_SOFT_DIE_SELECT); 
+			SPI.transfer(Act_Die);   
 			CSRELEASE();
-			
 			SPI.endTransaction();
 			delayMicroseconds(1);
+                  }
+	SPI.beginTransaction(SPICONFIG);
+	CSASSERT();
+     	SPI.transfer(CMD_PAGE_DATA_READ);
+        SPI.transfer(0); //Dummy byte
+        SPI.transfer16(addr >> 11);
+       	CSRELEASE();
+        SPI.endTransaction();
+        delayMicroseconds(50);
+	Curr_Page = addr >> 11;
+	busy = 1;
+        if (busy) wait();
+                  
+                  
+	SPI.beginTransaction(SPICONFIG);
+	CSASSERT(); 
+	SPI.transfer(0x06); // write enable command
+	CSRELEASE();
+	SPI.endTransaction();
+	delayMicroseconds(1);
 			
-			SPI.beginTransaction(SPICONFIG);
-			
-			CSASSERT();
-			SPIPORT.transfer(CMD_RAND_PROG_DATA_WRITE);// random program buffer page command
-            SPIPORT.transfer16(addr & 0x7FF);
+	SPI.beginTransaction(SPICONFIG);
+	CSASSERT();
+	SPIPORT.transfer(CMD_RAND_PROG_DATA_WRITE);// random program buffer page command
+        SPIPORT.transfer16(addr & 0x7FF);
 
     addr += pagelen;
     len -= pagelen;
@@ -273,20 +271,17 @@ pagelen = (len <= max) ? len : max;
     
     
     CSRELEASE();
-
-    
-    
-    //*********************
-CSASSERT();
+    delayMicroseconds(1);
+    CSASSERT();
     SPIPORT.transfer(CMD_PROG_EXECUTE);
     SPIPORT.transfer(0); //Dummy byte
     SPIPORT.transfer16((addr - 1) >> 11);
     CSRELEASE();
     SPIPORT.endTransaction();
     delayMicroseconds(50);
-//****************************
+
     PageRenew = true;
-    busy = 4;
+    busy = 1;
     
   } while (len > 0);
 
@@ -401,9 +396,11 @@ void SerialFlashChip::eraseBlock(uint32_t addr)
  
   CSRELEASE();
   SPI.endTransaction();
+  //Serial.println("Block erase...");
   busy = 1;
   PageRenew = true;
 }
+
 /*
 void SerialFlashChip::eraseBlock(uint32_t addr)
 {
@@ -746,3 +743,4 @@ W25M02GVZEIG		128
 // LE25U40CMC		1/2	64	62 06 13
 
 SerialFlashChip SerialFlash;
+
