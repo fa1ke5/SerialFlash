@@ -139,7 +139,7 @@ SPIPORT.endTransaction();
               { //Change active DIE acording to address
               
               Serial.print("Current DIE = ");Serial.println(Act_Die);
-              Serial.print("need DIE = ");Serial.println(addr >> 27);
+              Serial.print("need DIE = ");Serial.print(addr >> 27);Serial.print(" changing..");
               
               
               Act_Die = addr >> 27;
@@ -406,7 +406,6 @@ void SerialFlashChip::eraseBlock(uint32_t addr)
   CSRELEASE(); 
   SPI.endTransaction();
 
-
   if (DIE_NAND){
    	if (addr >> 16 != Act_Die)
 		{ //Select DIE
@@ -495,8 +494,9 @@ bool SerialFlashChip::ready()
 		if ((status & 1)) return false;
 	}
 	busy = 0;
-	if (flags & 0xC0 && !DIE_NAND) {
+	if (flags & 0xC0) {
 		// continue a multi-die erase
+Serial.println("Erase All function start.....");
 		eraseAll();
 		return false;
 	}
@@ -784,5 +784,3 @@ W25M02GVZEIG		128
 // LE25U40CMC		1/2	64	62 06 13
 
 SerialFlashChip SerialFlash;
-
-
