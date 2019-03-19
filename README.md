@@ -1,3 +1,8 @@
+# Warning!!!!!
+# Its not full functional copy!!!
+# Now low level code is totally rewriten only for Winbond W25M02GVZEIG
+Now this fork have in base functional, CopyFiles example is working, but may be some bugs....work in progress now......
+
 # SerialFlash
 
 SerialFlash provides low-latency, high performance access to SPI Flash memory with a filesystem-like interface for use with Arduino compatible boards.  Familiar file-based functions, similar to the SD library, are used to access data.
